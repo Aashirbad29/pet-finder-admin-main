@@ -47,10 +47,14 @@ const PetCreate = () => {
       </Button>
       <Modal title="Create New Pet" open={isModalOpen} onOk={handleOk} footer={null} onCancel={handleCancel}>
         <Form form={form} layout="vertical" name="pet-form" onFinish={onFinish}>
+          <Form.Item label="Name" name="name" rules={[{ required: true, message: "Required" }]}>
+            <Input />
+          </Form.Item>
           <Form.Item label="Speices" name="species" rules={[{ required: true, message: "Required" }]}>
             <Select placeholder="Select">
               <Option value="dog">Dog</Option>
               <Option value="cat">Cat</Option>
+              <Option value="other animals">Other Animals</Option>
             </Select>
           </Form.Item>
 

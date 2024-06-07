@@ -39,6 +39,7 @@ const AdoptionTable = () => {
       render: (data) => (
         <>
           <p>Pet Id: {data?.pet_id?._id}</p>
+          <p>Name: {data?.pet_id.name}</p>
           <p>
             Species / Breed: {data?.pet_id.species} - {data?.pet_id.breed}
           </p>

@@ -28,6 +28,7 @@ const PetUpdate = ({ id }) => {
   });
 
   useEffect(() => {
+    form.setFieldValue("name", data?.data?.result?.name);
     form.setFieldValue("species", data?.data?.result?.species);
     form.setFieldValue("breed", data?.data?.result?.breed);
     form.setFieldValue("age", data?.data?.result?.age);
@@ -43,6 +44,9 @@ const PetUpdate = ({ id }) => {
 
   return (
     <Form form={form} layout="vertical" name="pet-form" onFinish={onFinish}>
+      <Form.Item label="Name" name="name" rules={[{ required: true, message: "Required" }]}>
+        <Input />
+      </Form.Item>
       <Form.Item label="Speices" name="species" rules={[{ required: true, message: "Required" }]}>
         <Select placeholder="Select">
           <Option value="dog">Dog</Option>
