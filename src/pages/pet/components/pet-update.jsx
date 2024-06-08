@@ -1,5 +1,5 @@
 import { Form, Input, Select, InputNumber, Switch, Button, message } from "antd";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import { axiosInstance } from "../../../utils/axios";
 import { getToken } from "../../../utils/token";
@@ -9,6 +9,7 @@ const { Option } = Select;
 const PetUpdate = ({ id }) => {
   const [form] = Form.useForm();
   const queryClient = useQueryClient();
+  const [imageFile, setImageFile] = useState(null); // New state for image file
 
   const { data } = useQuery(["pet", id], () => axiosInstance.get(`pet/${id}`), {
     enabled: Boolean(id),
@@ -16,7 +17,17 @@ const PetUpdate = ({ id }) => {
 
   const mutation = useMutation({
     mutationFn: (values) => {
-      return axiosInstance.patch(`/pet/${id}`, values);
+      const formData = new FormData();
+      formData.append("name", values.name);
+      formData.append("species", values.species);
+      formData.append("breed", values.breed);
+      formData.append("age", values.age);
+      formData.append("gender", values.gender);
+      formData.append("description", values.description);
+      formData.append("vaccination_status", values.vaccination_status);
+      formData.append("photo", imageFile); // Append image file
+
+      return axiosInstance.patch(`/pet/${id}`, formData);
     },
     onSuccess: () => {
       message.success("Updated");
@@ -40,6 +51,10 @@ const PetUpdate = ({ id }) => {
 
   const onFinish = (values) => {
     mutation.mutate(values);
+  };
+
+  const handleImageChange = (e) => {
+    setImageFile(e.target.files[0]);
   };
 
   return (
@@ -72,9 +87,8 @@ const PetUpdate = ({ id }) => {
       <Form.Item label="Description" name="description" rules={[{ required: true, message: "Required" }]}>
         <Input.TextArea />
       </Form.Item>
-
-      <Form.Item label="Photo" name="photo" rules={[{ required: true, message: "Required" }]}>
-        <Input />
+      <Form.Item label="Photo">
+        <input type="file" onChange={handleImageChange} accept="image/*" />
       </Form.Item>
 
       <Form.Item label="Vaccination Status" name="vaccination_status">
