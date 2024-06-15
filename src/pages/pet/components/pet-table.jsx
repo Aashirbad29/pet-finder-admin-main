@@ -1,3 +1,5 @@
+// PetTable.jsx
+
 import React, { useState } from "react";
 import { Button, Image, Modal, Space, Table, message } from "antd";
 import { axiosInstance } from "../../../utils/axios";
@@ -20,9 +22,7 @@ const PetTable = () => {
   };
 
   const mutation = useMutation({
-    mutationFn: (id) => {
-      return axiosInstance.delete(`/pet/${id}`);
-    },
+    mutationFn: (id) => axiosInstance.delete(`/pet/${id}`),
     onSuccess: () => {
       message.success("Deleted Successfully");
       queryClient.invalidateQueries({ queryKey: ["pets"] });
@@ -88,36 +88,41 @@ const PetTable = () => {
       render: (text) => <p>{text ? "Adopted" : "Not Adopted"}</p>,
     },
     {
-      title: "Action",
-      key: "action",
+      title: "Actions",
+      key: "actions",
       render: (data) => (
-        <Space direction="vertical" size="middle">
+        <Space size="middle">
           <Button
             type="primary"
+            icon={<EditOutlined />}
             onClick={() => {
-              showModal();
               setCurrentId(data._id);
+              showModal();
             }}
-          >
-            <EditOutlined />
-          </Button>
-          <Button type="primary" onClick={() => mutation.mutate(data._id)}>
-            <DeleteOutlined />
-          </Button>
+          />
+          <Button type="primary" danger icon={<DeleteOutlined />} onClick={() => mutation.mutate(data._id)} />
         </Space>
       ),
     },
   ];
 
-  const { data, isLoading } = useQuery("pets", () => axiosInstance.get("/pet"), { initialData: [] });
+  const { data, isLoading } = useQuery("pets", () => axiosInstance.get("/pet"), {
+    select: (data) => ({
+      ...data,
+      data: {
+        ...data.data,
+        result: data.data.result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
+      },
+    }),
+  });
 
   return (
-    <>
-      <Modal title="Update Pet" open={isModalOpen} onCancel={handleCancel} footer={false}>
-        <PetUpdate id={currentId} />
-      </Modal>
+    <div>
       <Table loading={isLoading} bordered columns={columns} dataSource={data?.data?.result} rowKey={"_id"} />
-    </>
+      <Modal title="Update Pet" open={isModalOpen} footer={null} onCancel={handleCancel}>
+        <PetUpdate handleCancel={handleCancel} currentId={currentId} />
+      </Modal>
+    </div>
   );
 };
 

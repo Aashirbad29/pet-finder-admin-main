@@ -1,27 +1,29 @@
-import { Form, Input, Select, InputNumber, Switch, Button, message, Upload } from "antd";
 import React, { useEffect, useState } from "react";
+import { Button, Form, Input, InputNumber, message, Modal, Select, Switch, Upload } from "antd";
 import { useMutation, useQuery, useQueryClient } from "react-query";
-import { axiosInstance } from "../../../utils/axios";
 import { UploadOutlined } from "@ant-design/icons";
-import { getToken } from "../../../utils/token";
+import Cookies from "js-cookie";
+import { axiosInstance } from "../../../utils/axios";
 
 const { Option } = Select;
 
-const PetUpdate = ({ id }) => {
+const PetUpdate = ({ handleCancel, currentId }) => {
   const [form] = Form.useForm();
   const queryClient = useQueryClient();
-  const [imageFile, setImageFile] = useState(null); // New state for image file
-  const [fileList, setFileList] = useState([]); // State for file list
+  const [imageFile, setImageFile] = useState(null);
+  const [fileList, setFileList] = useState([]);
 
-  const { data } = useQuery(["pet", id], () => axiosInstance.get(`pet/${id}`), {
-    enabled: Boolean(id),
+  const { data } = useQuery(["pet", currentId], () => axiosInstance.get(`/pet/${currentId}`), {
+    enabled: Boolean(currentId),
     onSuccess: (data) => {
-      const photoUrl = data?.data?.result?.photo;
+      const petData = data?.data?.result;
+      form.setFieldsValue(petData);
+      const photoUrl = petData?.photo;
       if (photoUrl) {
         setFileList([
           {
-            uid: "-1", // Unique identifier
-            name: photoUrl.split("/").pop(), // Extract the file name from the URL
+            uid: "-1",
+            name: photoUrl.split("/").pop(),
             status: "done",
             url: `http://localhost:4000/${photoUrl}`,
           },
@@ -31,40 +33,27 @@ const PetUpdate = ({ id }) => {
   });
 
   const mutation = useMutation({
-    mutationFn: (values) => {
-      return axiosInstance.patch(`/pet/${id}`, { ...values, photo: imageFile });
-    },
+    mutationFn: (values) => axiosInstance.patch(`/pet/${currentId}`, { ...values, photo: imageFile }),
     onSuccess: () => {
-      message.success("Updated");
-      queryClient.invalidateQueries({ queryKey: ["pets"] });
+      message.success("Pet updated successfully");
+      queryClient.invalidateQueries(["pets"]);
+      form.resetFields();
+      handleCancel();
+      setImageFile(null);
     },
     onError: (error) => {
       message.error(error.response.data.msg);
     },
   });
 
-  useEffect(() => {
-    form.setFieldValue("name", data?.data?.result?.name);
-    form.setFieldValue("species", data?.data?.result?.species);
-    form.setFieldValue("breed", data?.data?.result?.breed);
-    form.setFieldValue("age", data?.data?.result?.age);
-    form.setFieldValue("gender", data?.data?.result?.gender);
-    form.setFieldValue("description", data?.data?.result?.description);
-    form.setFieldValue("photo", data?.data?.result?.photo);
-    form.setFieldValue("vaccination_status", data?.data?.result?.vaccination_status);
-  }, [data]);
-
-  const props = {
+  const uploadProps = {
     name: "photo",
     action: "http://localhost:4000/api/pet/upload",
-    fileList: fileList,
+    headers: { authorization: Cookies.get("token") },
+    fileList,
     onChange(info) {
-      let newFileList = [...info.fileList];
-      newFileList = newFileList.slice(-1); // Limit the number of uploaded files to 1
+      let newFileList = [...info.fileList].slice(-1); // Limit the number of uploaded files to 1
       setFileList(newFileList);
-
-      if (info.file.status !== "uploading") {
-      }
       if (info.file.status === "done") {
         setImageFile(info.fileList[0].response.photo);
         message.success(`${info.file.name} file uploaded successfully`);
@@ -79,45 +68,47 @@ const PetUpdate = ({ id }) => {
   };
 
   return (
-    <Form form={form} initialValues={{ data }} layout="vertical" name="pet-form" onFinish={onFinish}>
+    <Form form={form} layout="vertical" onFinish={onFinish}>
       <Form.Item label="Name" name="name" rules={[{ required: true, message: "Required" }]}>
         <Input />
       </Form.Item>
-      <Form.Item label="Speices" name="species" rules={[{ required: true, message: "Required" }]}>
+      <Form.Item label="Species" name="species" rules={[{ required: true, message: "Required" }]}>
         <Select placeholder="Select">
           <Option value="dog">Dog</Option>
           <Option value="cat">Cat</Option>
+          <Option value="other animals">Other Animals</Option>
         </Select>
       </Form.Item>
-
       <Form.Item label="Breed" name="breed" rules={[{ required: true, message: "Required" }]}>
         <Input />
       </Form.Item>
-
-      <Form.Item label="Age" name="age" rules={[{ required: true, message: "Required" }]}>
-        <InputNumber />
+      <Form.Item
+        label="Age (in years)"
+        name="age"
+        rules={[
+          { required: true, message: "Required" },
+          { type: "number", min: 1, max: 18, message: "Age must be between 1 and 18" },
+        ]}
+      >
+        <InputNumber min={1} max={18} />
       </Form.Item>
-
       <Form.Item label="Gender" name="gender" rules={[{ required: true, message: "Required" }]}>
         <Select placeholder="Select">
           <Option value="male">Male</Option>
           <Option value="female">Female</Option>
         </Select>
       </Form.Item>
-
       <Form.Item label="Description" name="description" rules={[{ required: true, message: "Required" }]}>
         <Input.TextArea />
       </Form.Item>
       <Form.Item label="Photo" name="photo" rules={[{ required: true, message: "Required" }]}>
-        <Upload maxCount={1} {...props}>
+        <Upload maxCount={1} {...uploadProps}>
           <Button icon={<UploadOutlined />}>Click to Upload</Button>
         </Upload>
       </Form.Item>
-
-      <Form.Item label="Vaccination Status" name="vaccination_status">
-        <Switch checkedChildren={"Yes"} unCheckedChildren={"No"} />
+      <Form.Item label="Vaccination Status" name="vaccination_status" valuePropName="checked">
+        <Switch checkedChildren="Yes" unCheckedChildren="No" />
       </Form.Item>
-
       <Form.Item>
         <Button type="primary" htmlType="submit">
           Submit

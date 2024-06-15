@@ -6,7 +6,16 @@ import { axiosInstance } from "../../../utils/axios";
 import { useQuery } from "react-query";
 
 const AdminPetList = () => {
-  const { data, isLoading } = useQuery("pets", () => axiosInstance.get("/pet"));
+  const { data, isLoading } = useQuery("pets", () => axiosInstance.get("/pet"), {
+    initialData: [],
+    select: (data) => ({
+      ...data,
+      data: {
+        ...data.data,
+        result: data.data.result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
+      },
+    }),
+  });
 
   const columns = [
     {

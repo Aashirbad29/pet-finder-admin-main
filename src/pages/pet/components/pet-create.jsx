@@ -11,7 +11,7 @@ const PetCreate = () => {
   const [form] = Form.useForm();
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [imageFile, setImageFile] = useState(null); // New state for image file
+  const [imageFile, setImageFile] = useState(null);
 
   const mutation = useMutation({
     mutationFn: (values) => {
@@ -21,7 +21,7 @@ const PetCreate = () => {
       queryClient.invalidateQueries({ queryKey: ["pets"] });
       form.resetFields();
       setIsModalOpen(false);
-      setImageFile(null); // Reset image file state
+      setImageFile(null);
       message.success("Pet created successfully");
     },
     onError: (error) => {
@@ -36,8 +36,6 @@ const PetCreate = () => {
       authorization: Cookies.get("token"),
     },
     onChange(info) {
-      if (info.file.status !== "uploading") {
-      }
       if (info.file.status === "done") {
         setImageFile(info.fileList[0].response.photo);
         message.success(`${info.file.name} file uploaded successfully`);
@@ -55,10 +53,6 @@ const PetCreate = () => {
     setIsModalOpen(true);
   };
 
-  const handleOk = () => {
-    setIsModalOpen(false);
-  };
-
   const handleCancel = () => {
     setIsModalOpen(false);
   };
@@ -68,7 +62,7 @@ const PetCreate = () => {
       <Button type="primary" onClick={showModal}>
         Create New Pet
       </Button>
-      <Modal title="Create New Pet" open={isModalOpen} onOk={handleOk} footer={null} onCancel={handleCancel}>
+      <Modal title="Create New Pet" open={isModalOpen} footer={null} onCancel={handleCancel}>
         <Form form={form} layout="vertical" name="pet-form" onFinish={onFinish}>
           <Form.Item label="Name" name="name" rules={[{ required: true, message: "Required" }]}>
             <Input />
@@ -87,7 +81,7 @@ const PetCreate = () => {
 
           <Form.Item
             label="Age (in years)"
-            name={"age"}
+            name="age"
             rules={[
               { required: true, message: "Required" },
               { type: "number", min: 1, max: 18, message: "Age must be between 1 and 18" },
