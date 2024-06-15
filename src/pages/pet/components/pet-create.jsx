@@ -22,6 +22,7 @@ const PetCreate = () => {
       form.resetFields();
       setIsModalOpen(false);
       setImageFile(null); // Reset image file state
+      message.success("Pet created successfully");
     },
     onError: (error) => {
       message.error(error.response.data.msg);
@@ -84,8 +85,15 @@ const PetCreate = () => {
             <Input />
           </Form.Item>
 
-          <Form.Item label="Age (in years)" name={"age"} rules={[{ required: true, message: "Required" }]}>
-            <InputNumber />
+          <Form.Item
+            label="Age (in years)"
+            name={"age"}
+            rules={[
+              { required: true, message: "Required" },
+              { type: "number", min: 1, max: 18, message: "Age must be between 1 and 18" },
+            ]}
+          >
+            <InputNumber min={1} max={18} />
           </Form.Item>
 
           <Form.Item label="Gender" name="gender" rules={[{ required: true, message: "Required" }]}>

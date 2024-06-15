@@ -2,9 +2,13 @@ import React, { useEffect, useState } from "react";
 import { Bar } from "react-chartjs-2";
 import { axiosInstance } from "../../utils/axios";
 import { Chart, BarController, BarElement, CategoryScale, LinearScale, Title, Tooltip, Legend } from "chart.js";
+import { Select } from "antd";
+import moment from "moment";
 
 // Register the necessary Chart.js components
 Chart.register(BarController, BarElement, CategoryScale, LinearScale, Title, Tooltip, Legend);
+
+const { Option } = Select;
 
 const Dashboard = () => {
   const [adoptionData, setAdoptionData] = useState({ total: 0, approved: 0, declined: 0 });
@@ -14,15 +18,17 @@ const Dashboard = () => {
     adopted: [],
     notAdopted: [],
   });
+  const [dateRange, setDateRange] = useState(30); // Default to last 30 days
 
   useEffect(() => {
     const fetchAdoptionData = async () => {
       try {
         const response = await axiosInstance.get("/adoption");
         const adoptions = response.data.result;
+        const filteredAdoptions = filterByDateRange(adoptions, dateRange);
 
-        const total = adoptions.length;
-        const approved = adoptions.filter((req) => req.status === true).length;
+        const total = filteredAdoptions.length;
+        const approved = filteredAdoptions.filter((req) => req.status === true).length;
         const declined = total - approved;
 
         setAdoptionData({ total, approved, declined });
@@ -35,10 +41,11 @@ const Dashboard = () => {
       try {
         const response = await axiosInstance.get("/rescues");
         const rescues = response.data.result;
+        const filteredRescues = filterByDateRange(rescues, dateRange);
 
-        const total = rescues.length;
-        const approved = rescues.filter((req) => req.status === "Approved").length;
-        const declined = rescues.filter((req) => req.status === "Rejected").length;
+        const total = filteredRescues.length;
+        const approved = filteredRescues.filter((req) => req.status === "Approved").length;
+        const declined = filteredRescues.filter((req) => req.status === "Rejected").length;
 
         setRescueData({ total, approved, declined });
       } catch (error) {
@@ -50,9 +57,10 @@ const Dashboard = () => {
       try {
         const response = await axiosInstance.get("/pet");
         const pets = response.data.result;
+        const filteredPets = filterByDateRange(pets, dateRange);
 
         const speciesCount = {};
-        pets.forEach((pet) => {
+        filteredPets.forEach((pet) => {
           if (!speciesCount[pet.species]) {
             speciesCount[pet.species] = { adopted: 0, notAdopted: 0 };
           }
@@ -76,7 +84,12 @@ const Dashboard = () => {
     fetchAdoptionData();
     fetchRescueData();
     fetchPetData();
-  }, []);
+  }, [dateRange]);
+
+  const filterByDateRange = (data, range) => {
+    const now = moment();
+    return data.filter((item) => moment(item.createdAt).isAfter(now.clone().subtract(range, "days")));
+  };
 
   const adoptionRescueData = {
     labels: ["Adoption Requests", "Rescue Requests"],
@@ -136,6 +149,11 @@ const Dashboard = () => {
   return (
     <div>
       <h2>Dashboard</h2>
+      <Select defaultValue={30} style={{ width: 120 }} onChange={(value) => setDateRange(value)}>
+        <Option value={7}>Last 7 Days</Option>
+        <Option value={15}>Last 15 Days</Option>
+        <Option value={30}>Last 30 Days</Option>
+      </Select>
       <Bar data={adoptionRescueData} options={options} />
       <h2>Pet Adoption Status by Species</h2>
       <Bar data={petAdoptionStatusData} options={options} />
