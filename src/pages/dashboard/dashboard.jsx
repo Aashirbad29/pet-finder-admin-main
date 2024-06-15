@@ -9,6 +9,11 @@ Chart.register(BarController, BarElement, CategoryScale, LinearScale, Title, Too
 const Dashboard = () => {
   const [adoptionData, setAdoptionData] = useState({ total: 0, approved: 0, declined: 0 });
   const [rescueData, setRescueData] = useState({ total: 0, approved: 0, declined: 0 });
+  const [petAdoptionData, setPetAdoptionData] = useState({
+    species: [],
+    adopted: [],
+    notAdopted: [],
+  });
 
   useEffect(() => {
     const fetchAdoptionData = async () => {
@@ -41,11 +46,39 @@ const Dashboard = () => {
       }
     };
 
+    const fetchPetData = async () => {
+      try {
+        const response = await axiosInstance.get("/pet");
+        const pets = response.data.result;
+
+        const speciesCount = {};
+        pets.forEach((pet) => {
+          if (!speciesCount[pet.species]) {
+            speciesCount[pet.species] = { adopted: 0, notAdopted: 0 };
+          }
+          if (pet.is_adopted) {
+            speciesCount[pet.species].adopted++;
+          } else {
+            speciesCount[pet.species].notAdopted++;
+          }
+        });
+
+        const species = Object.keys(speciesCount);
+        const adopted = species.map((specie) => speciesCount[specie].adopted);
+        const notAdopted = species.map((specie) => speciesCount[specie].notAdopted);
+
+        setPetAdoptionData({ species, adopted, notAdopted });
+      } catch (error) {
+        console.error("Error fetching pet data:", error);
+      }
+    };
+
     fetchAdoptionData();
     fetchRescueData();
+    fetchPetData();
   }, []);
 
-  const data = {
+  const adoptionRescueData = {
     labels: ["Adoption Requests", "Rescue Requests"],
     datasets: [
       {
@@ -72,6 +105,26 @@ const Dashboard = () => {
     ],
   };
 
+  const petAdoptionStatusData = {
+    labels: petAdoptionData.species,
+    datasets: [
+      {
+        label: "Adopted",
+        data: petAdoptionData.adopted,
+        backgroundColor: "rgba(75, 192, 192, 0.2)",
+        borderColor: "rgba(75, 192, 192, 1)",
+        borderWidth: 1,
+      },
+      {
+        label: "Not Adopted",
+        data: petAdoptionData.notAdopted,
+        backgroundColor: "rgba(255, 159, 64, 0.2)",
+        borderColor: "rgba(255, 159, 64, 1)",
+        borderWidth: 1,
+      },
+    ],
+  };
+
   const options = {
     scales: {
       y: {
@@ -83,7 +136,9 @@ const Dashboard = () => {
   return (
     <div>
       <h2>Dashboard</h2>
-      <Bar data={data} options={options} />
+      <Bar data={adoptionRescueData} options={options} />
+      <h2>Pet Adoption Status by Species</h2>
+      <Bar data={petAdoptionStatusData} options={options} />
     </div>
   );
 };
