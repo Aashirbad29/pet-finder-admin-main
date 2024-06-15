@@ -72,7 +72,7 @@ const PetCreate = () => {
           <Form.Item label="Name" name="name" rules={[{ required: true, message: "Required" }]}>
             <Input />
           </Form.Item>
-          <Form.Item label="Speices" name="species" rules={[{ required: true, message: "Required" }]}>
+          <Form.Item label="Species" name="species" rules={[{ required: true, message: "Required" }]}>
             <Select placeholder="Select">
               <Option value="dog">Dog</Option>
               <Option value="cat">Cat</Option>

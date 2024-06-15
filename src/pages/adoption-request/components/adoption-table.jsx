@@ -54,7 +54,13 @@ const AdoptionTable = () => {
       title: "Photo",
       key: "photo",
       render: (data) => (
-        <Image width={100} height={100} preview style={{ objectFit: "contain" }} src={data?.pet_id?.photo} />
+        <Image
+          width={100}
+          height={100}
+          preview
+          style={{ objectFit: "contain" }}
+          src={`http://localhost:4000/${data?.pet_id?.photo}`}
+        />
       ),
     },
     {
@@ -80,7 +86,6 @@ const AdoptionTable = () => {
           <Button onClick={() => mutation.mutate({ id: data?._id, status: true })}>
             <CheckOutlined style={{ color: "green" }} />
           </Button>
-
           <Button onClick={() => mutation.mutate({ id: data?._id, status: false })}>
             <CloseOutlined style={{ color: "red" }} />
           </Button>
