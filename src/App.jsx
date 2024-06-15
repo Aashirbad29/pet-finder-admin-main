@@ -7,6 +7,7 @@ import Dashboard from "./pages/dashboard/dashboard";
 import Pet from "./pages/pet/pet";
 import AdoptionRequest from "./pages/adoption-request/adoption-request";
 import RescueRequest from "./pages/rescue-request/rescue-request";
+import AdminPetList from "./pages/pet/components/AdminPetList";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
                 <Route path="/pet" element={<Pet />} />
                 <Route path="/adoption-request" element={<AdoptionRequest />} />
                 <Route path="/rescue-request" element={<RescueRequest />} />
+                <Route path="/petlist" element={<AdminPetList />} />
               </Route>
             </Route>
           </Route>

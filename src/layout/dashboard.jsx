@@ -33,6 +33,11 @@ const DashboardLayout = () => {
       icon: <OrderedListOutlined />,
       label: "Rescue Request",
     },
+    {
+      key: "/petlist",
+      icon: <OrderedListOutlined />,
+      label: "PetList",
+    },
   ];
 
   const onMenuClick = (event) => {
