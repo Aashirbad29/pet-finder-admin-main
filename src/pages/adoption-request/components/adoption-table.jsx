@@ -1,3 +1,4 @@
+import React from "react";
 import { Button, Image, Space, Table, message } from "antd";
 import { axiosInstance } from "../../../utils/axios";
 import { useMutation, useQuery, useQueryClient } from "react-query";
@@ -17,6 +18,17 @@ const AdoptionTable = () => {
     onError: (error) => {
       message.error(error.response.data?.msg);
     },
+  });
+
+  const { data, isLoading } = useQuery("adoptions", () => axiosInstance.get("/adoption"), {
+    initialData: [],
+    select: (data) => ({
+      ...data,
+      data: {
+        ...data.data,
+        result: data.data.result.sort((a, b) => new Date(b.request_date) - new Date(a.request_date)),
+      },
+    }),
   });
 
   const columns = [
@@ -93,8 +105,6 @@ const AdoptionTable = () => {
       ),
     },
   ];
-
-  const { data, isLoading } = useQuery("adoptions", () => axiosInstance.get("/adoption"), { initialData: [] });
 
   return (
     <>
