@@ -37,7 +37,9 @@ const PetTable = () => {
       title: "Picture",
       dataIndex: "photo",
       key: "photo",
-      render: (text) => <Image width={100} height={100} preview style={{ objectFit: "contain" }} src={text} />,
+      render: (text) => (
+        <Image width={100} height={100} preview style={{ objectFit: "contain" }} src={`http://localhost:4000/${text}`} />
+      ),
     },
     {
       title: "Name",

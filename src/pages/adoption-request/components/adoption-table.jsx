@@ -63,6 +63,16 @@ const AdoptionTable = () => {
       render: (data) => <p>{data?.status ? "Adopted" : "Not Adopted"}</p>,
     },
     {
+      title: "Request Date",
+      key: "request_date",
+      render: (data) => <p>{new Date(data?.request_date).toLocaleString()}</p>,
+    },
+    {
+      title: "Response Date",
+      key: "response_date",
+      render: (data) => (data?.response_date ? <p>{new Date(data?.response_date).toLocaleString()}</p> : <p>Pending</p>),
+    },
+    {
       title: "Action",
       key: "action",
       render: (data) => (

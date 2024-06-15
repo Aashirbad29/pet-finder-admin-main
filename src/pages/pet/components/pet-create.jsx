@@ -1,7 +1,9 @@
 import React, { useState } from "react";
-import { Button, Modal, Form, Input, message, InputNumber, Select, Switch } from "antd";
+import { Button, Modal, Form, Input, message, InputNumber, Select, Switch, Upload } from "antd";
 import { useMutation, useQueryClient } from "react-query";
 import { axiosInstance } from "../../../utils/axios";
+import { UploadOutlined } from "@ant-design/icons";
+import Cookies from "js-cookie";
 
 const { Option } = Select;
 
@@ -13,17 +15,7 @@ const PetCreate = () => {
 
   const mutation = useMutation({
     mutationFn: (values) => {
-      const formData = new FormData();
-      formData.append("name", values.name);
-      formData.append("species", values.species);
-      formData.append("breed", values.breed);
-      formData.append("age", values.age);
-      formData.append("gender", values.gender);
-      formData.append("description", values.description);
-      formData.append("vaccination_status", values.vaccination_status);
-      formData.append("photo", imageFile); // Append image file
-
-      return axiosInstance.post("/pet", formData);
+      return axiosInstance.post("/pet", { ...values, photo: imageFile });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pets"] });
@@ -36,12 +28,26 @@ const PetCreate = () => {
     },
   });
 
-  const onFinish = (value) => {
-    mutation.mutate(value);
+  const props = {
+    name: "photo",
+    action: "http://localhost:4000/api/pet/upload",
+    headers: {
+      authorization: Cookies.get("token"),
+    },
+    onChange(info) {
+      if (info.file.status !== "uploading") {
+      }
+      if (info.file.status === "done") {
+        setImageFile(info.fileList[0].response.photo);
+        message.success(`${info.file.name} file uploaded successfully`);
+      } else if (info.file.status === "error") {
+        message.error(`${info.file.name} file upload failed.`);
+      }
+    },
   };
 
-  const handleImageChange = (e) => {
-    setImageFile(e.target.files[0]);
+  const onFinish = (value) => {
+    mutation.mutate(value);
   };
 
   const showModal = () => {
@@ -78,7 +84,7 @@ const PetCreate = () => {
             <Input />
           </Form.Item>
 
-          <Form.Item label="Age (in years)" name={["age", "years"]} rules={[{ required: true, message: "Required" }]}>
+          <Form.Item label="Age (in years)" name={"age"} rules={[{ required: true, message: "Required" }]}>
             <InputNumber />
           </Form.Item>
 
@@ -93,7 +99,9 @@ const PetCreate = () => {
             <Input.TextArea />
           </Form.Item>
           <Form.Item label="Photo" name="photo" rules={[{ required: true, message: "Required" }]}>
-            <input type="file" onChange={handleImageChange} accept="image/*" />
+            <Upload maxCount={1} {...props}>
+              <Button icon={<UploadOutlined />}>Click to Upload</Button>
+            </Upload>
           </Form.Item>
           <Form.Item label="Vaccination Status" name="vaccination_status">
             <Switch checkedChildren={"Yes"} unCheckedChildren={"No"} />

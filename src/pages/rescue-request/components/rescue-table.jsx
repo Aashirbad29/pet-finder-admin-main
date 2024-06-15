@@ -1,3 +1,4 @@
+import React from "react";
 import { Button, Space, Table, message } from "antd";
 import { axiosInstance } from "../../../utils/axios";
 import { useMutation, useQuery, useQueryClient } from "react-query";
@@ -19,14 +20,25 @@ const RescueTable = () => {
     },
   });
 
+  const { data, isLoading } = useQuery("rescues", () => axiosInstance.get("/rescues"), {
+    initialData: [],
+    select: (data) => ({
+      ...data,
+      data: {
+        ...data.data,
+        result: data.data.result.sort((a, b) => new Date(b.request_date) - new Date(a.request_date)),
+      },
+    }),
+  });
+
   const columns = [
     {
       title: "Requested By",
       key: "requestedBy",
       render: (data) => (
         <>
-          <p>Name: {data?.user_id.name}</p>
-          <p>Email: {data?.user_id.email}</p>
+          <p>Name: {data?.user_id?.name}</p>
+          <p>Email: {data?.user_id?.email}</p>
           <p>
             Contact: {data?.user_id.address}, {data?.user_id.phone_number}
           </p>
@@ -42,6 +54,16 @@ const RescueTable = () => {
       title: "Status",
       key: "status",
       render: (data) => <p>{data?.status}</p>,
+    },
+    {
+      title: "Request Date",
+      key: "request_date",
+      render: (data) => <p>{new Date(data.request_date).toLocaleString()}</p>,
+    },
+    {
+      title: "Response Date",
+      key: "response_date",
+      render: (data) => (data.response_date ? <p>{new Date(data.response_date).toLocaleString()}</p> : <p>Pending</p>),
     },
     {
       title: "Action",
@@ -60,11 +82,9 @@ const RescueTable = () => {
     },
   ];
 
-  const { data, isLoading } = useQuery("rescues", () => axiosInstance.get("/rescues"), { initialData: [] });
-
   return (
     <>
-      <Table loading={isLoading} bordered columns={columns} dataSource={data?.data?.result} rowKey={"_id"} />
+      <Table loading={isLoading} bordered columns={columns} dataSource={data?.data?.result} rowKey="_id" />
     </>
   );
 };
